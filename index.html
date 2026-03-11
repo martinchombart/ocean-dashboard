@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Ocean Health Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="/src/style.css"/>
+</head>
+<body class="h-full bg-ocean-950 text-white overflow-hidden flex flex-col font-mono select-none">
+
+  <!-- TOP BAR -->
+  <header class="flex-shrink-0 h-14 flex items-center px-5 gap-0
+                 bg-ocean-900/95 border-b border-ocean-700 backdrop-blur-md z-50">
+    <div class="font-display font-black text-[15px] tracking-tight mr-8 whitespace-nowrap">
+      OCEAN <span class="text-ocean-accent">HEALTH</span> DASHBOARD
+    </div>
+
+    <nav id="data-tabs" class="flex gap-1.5 flex-1">
+      <button class="data-tab active" data-key="temperature">
+        <span class="tab-dot"></span>Temperature
+      </button>
+      <button class="data-tab" data-key="salinity">
+        <span class="tab-dot"></span>Salinity
+      </button>
+      <button class="data-tab" data-key="ph">
+        <span class="tab-dot"></span>pH
+      </button>
+    </nav>
+
+    <div class="flex items-center gap-3 ml-auto">
+      <!-- Compare pill -->
+      <div id="compare-pill" class="hidden items-center gap-2 px-3 py-1 rounded-full
+           text-[10px] bg-ocean-accent/10 border border-ocean-accent/25 text-ocean-accent">
+        <span class="w-1.5 h-1.5 rounded-full bg-ocean-accent animate-pulse inline-block"></span>
+        Compare Mode
+      </div>
+
+      <!-- Toggle -->
+      <div class="flex items-center gap-2 text-[10px] text-gray-500">
+        <span>Normal</span>
+        <button id="compare-toggle"
+          class="relative w-10 h-5 rounded-full border border-ocean-600 bg-ocean-700
+                 transition-all duration-200 focus:outline-none" role="switch" aria-checked="false">
+          <span id="toggle-thumb"
+            class="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white
+                   transition-all duration-200 pointer-events-none"></span>
+        </button>
+        <span>Compare</span>
+      </div>
+
+      <!-- Season -->
+      <select id="season-select"
+        class="bg-ocean-800 border border-ocean-700 text-gray-300 font-mono
+               text-[10px] px-2 py-1.5 rounded focus:outline-none
+               focus:border-ocean-accent cursor-pointer hover:border-ocean-500
+               transition-colors">
+        <option value="year">Full Year</option>
+        <option value="spring">Spring</option>
+        <option value="summer">Summer</option>
+        <option value="fall">Fall</option>
+        <option value="winter">Winter</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="flex flex-1 min-h-0 overflow-hidden">
+
+    <!-- MAP -->
+    <div id="map-wrap" class="flex-1 relative overflow-hidden">
+      <div id="map" class="absolute inset-0"></div>
+
+      <!-- Cursor tooltip -->
+      <div id="tooltip"
+        class="fixed z-50 pointer-events-none hidden
+               bg-ocean-900/95 border border-ocean-accent rounded-lg
+               px-3.5 py-2.5 min-w-[155px] backdrop-blur-md shadow-glow-blue">
+        <div id="tt-label" class="text-[9px] uppercase tracking-widest text-gray-500 mb-0.5"></div>
+        <div id="tt-value" class="font-display font-bold text-[17px] text-white leading-none"></div>
+        <div id="tt-unit"  class="text-[10px] text-gray-400 mt-0.5"></div>
+        <div id="tt-coord" class="text-[9px] text-gray-600 mt-2 pt-2 border-t border-ocean-700"></div>
+      </div>
+
+      <!-- Legend -->
+      <div id="legend"
+        class="absolute left-4 top-4 z-30 bg-ocean-900/90 border border-ocean-700
+               rounded-lg px-3 py-2.5 backdrop-blur-md min-w-[180px]">
+        <div id="leg-title" class="text-[9px] uppercase tracking-widest text-gray-500 mb-2"></div>
+        <div id="leg-bar"   class="h-2 rounded-full w-full mb-1.5"></div>
+        <div class="flex justify-between text-[8px] text-gray-500">
+          <span id="leg-min"></span><span id="leg-mid"></span><span id="leg-max"></span>
+        </div>
+        <div id="leg-mode" class="text-[8px] text-gray-500 mt-1.5"></div>
+      </div>
+
+      <!-- Mode badge -->
+      <div id="mode-badge"
+        class="absolute top-4 left-1/2 -translate-x-1/2 z-30 pointer-events-none
+               bg-ocean-900/85 border border-ocean-700 rounded-full
+               px-4 py-1.5 text-[10px] text-gray-400 backdrop-blur-md
+               flex items-center gap-2 whitespace-nowrap">
+        <span class="w-1.5 h-1.5 rounded-full bg-ocean-accent inline-block"></span>
+        <span id="badge-text">Normal Mode · 2024 · Full Year</span>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="absolute left-4 bottom-24 z-30 flex flex-col gap-1">
+        <button id="btn-zoom-in"    class="zoom-btn">+</button>
+        <button id="btn-zoom-out"   class="zoom-btn">−</button>
+        <button id="btn-zoom-reset" class="zoom-btn text-[10px]">⊙</button>
+      </div>
+
+      <!-- Loading overlay -->
+      <div id="loading"
+        class="absolute inset-0 z-50 bg-ocean-950 flex flex-col
+               items-center justify-center gap-4 transition-opacity duration-500">
+        <div class="w-8 h-8 rounded-full border-2 border-ocean-700 border-t-ocean-accent animate-spin"></div>
+        <p id="loading-text" class="font-display text-[12px] text-gray-500">Initializing…</p>
+      </div>
+    </div>
+
+    <!-- INFO PANEL -->
+    <aside id="info-panel"
+      class="w-72 flex-shrink-0 bg-ocean-900 border-l border-ocean-700
+             flex flex-col overflow-hidden relative transition-[width] duration-300">
+      <button id="panel-toggle"
+        class="absolute -left-[15px] top-1/2 -translate-y-1/2 z-10 w-[15px] h-12
+               bg-ocean-900 border border-ocean-700 border-r-0 rounded-l
+               flex items-center justify-center text-gray-500 hover:text-ocean-accent
+               transition-colors text-[9px]">‹</button>
+      <div id="panel-content"
+        class="flex-1 overflow-y-auto p-5 space-y-4
+               [scrollbar-width:thin] [scrollbar-color:theme(colors.ocean.700)_transparent]">
+      </div>
+    </aside>
+  </div>
+
+  <!-- TIMELINE -->
+  <footer class="flex-shrink-0 h-20 bg-ocean-950 border-t border-ocean-700
+                 flex items-center gap-4 px-5 z-40">
+    <span class="text-[9px] uppercase tracking-widest text-gray-600 whitespace-nowrap">Timeline</span>
+
+    <div id="tl-track" class="flex-1 relative h-12 cursor-pointer">
+      <div class="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-px bg-ocean-700 rounded"></div>
+      <div id="tl-fill" class="absolute top-1/2 -translate-y-1/2 h-px bg-ocean-accent rounded"
+           style="left:0%;width:100%"></div>
+      <div id="tl-marks"></div>
+      <div id="hdl-a" class="tl-handle hidden bg-ocean-warm border-ocean-warm shadow-glow-orange"></div>
+      <div id="hdl-b" class="tl-handle hidden bg-ocean-accent border-ocean-accent shadow-glow-blue"></div>
+      <div id="tl-cmp-hint" class="hidden absolute top-1 left-1/2 -translate-x-1/2
+           text-[8px] text-gray-600 whitespace-nowrap pointer-events-none">
+        Drag handles to compare years
+      </div>
+    </div>
+
+    <div id="yr-display"  class="font-display font-black text-2xl text-white min-w-[52px] text-right">2024</div>
+    <div id="cmp-display" class="hidden flex-col items-end gap-0.5 min-w-[88px]">
+      <span id="cmp-a" class="font-display font-bold text-sm text-ocean-warm">1990</span>
+      <span class="text-[8px] text-gray-600">vs</span>
+      <span id="cmp-b" class="font-display font-bold text-sm text-ocean-accent">2024</span>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
