@@ -3,94 +3,113 @@
 @tailwind utilities;
 
 @layer base {
-  /* Mapbox GL overrides */
   .mapboxgl-ctrl-attrib {
-    background: rgba(4,14,26,.85) !important;
-    color: #3d5568 !important;
+    background: rgba(7,89,133,.85) !important;
+    color: #bae6fd !important;
     font-size: 9px !important;
   }
-  .mapboxgl-ctrl-attrib a { color: #3d5568 !important; }
+  .mapboxgl-ctrl-attrib a { color: #bae6fd !important; }
   .mapboxgl-ctrl-logo { display: none !important; }
-  .mapboxgl-canvas { cursor: crosshair !important; }
+  .mapboxgl-canvas-container { cursor: default !important; }
+  .mapboxgl-canvas { cursor: inherit !important; }
   .mapboxgl-ctrl-bottom-right { bottom: 84px !important; }
 }
 
 @layer components {
+  /* ── Tabs ─────────────────────────────────────── */
   .data-tab {
-    @apply flex items-center gap-1.5 px-4 py-1.5 rounded
-           font-display font-semibold text-[12px] tracking-wide
+    @apply flex items-center gap-1.5 px-4 py-1.5 rounded-xl
+           font-display font-bold text-[13px] tracking-normal
            border border-transparent cursor-pointer
-           text-gray-500 bg-transparent transition-all duration-150;
+           transition-all duration-150;
+    color: rgba(255,255,255,0.55);
   }
-  .data-tab:hover  { @apply text-gray-300 border-ocean-700; }
-  .data-tab.active { @apply bg-white/[.04]; }
-
-  /* Tab color set by data-key attribute */
-  .data-tab[data-key="temperature"] { --tc: theme('colors.ocean.warm'); }
-  .data-tab[data-key="salinity"]    { --tc: theme('colors.ocean.teal'); }
-  .data-tab[data-key="ph"]          { --tc: theme('colors.ocean.violet'); }
+  .data-tab:hover { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.2); }
+  .data-tab[data-key="temperature"] { --tc: #f97316; }
+  .data-tab[data-key="salinity"]    { --tc: #14b8a6; }
+  .data-tab[data-key="ph"]          { --tc: #a78bfa; }
   .data-tab.active {
     color: var(--tc);
     border-color: var(--tc);
+    background: rgba(255,255,255,0.08);
     box-shadow: 0 0 14px -5px var(--tc);
   }
-
   .tab-dot { @apply inline-block w-1.5 h-1.5 rounded-full bg-current opacity-60; }
 
-  /* Timeline marks */
+  /* ── Timeline ─────────────────────────────────── */
   .tl-mark {
     @apply absolute top-1/2 -translate-x-1/2 -translate-y-1/2
            flex flex-col items-center cursor-pointer;
   }
   .tl-dot {
-    @apply w-1.5 h-1.5 rounded-full bg-ocean-700 transition-all duration-150;
+    @apply w-2 h-2 rounded-full transition-all duration-150;
+    background: rgba(14,165,233,0.3);
+    border: 1.5px solid rgba(14,165,233,0.5);
   }
-  .tl-mark:hover  .tl-dot,
-  .tl-mark.active .tl-dot { @apply bg-ocean-accent scale-150; }
-  .tl-mark.active .tl-dot { box-shadow: 0 0 7px theme('colors.ocean.accent'); }
+  .tl-mark:hover .tl-dot { background:#0ea5e9; transform:scale(2); }
+  .tl-mark.active .tl-dot {
+    background: #0ea5e9;
+    transform: scale(3);
+    box-shadow: 0 0 12px 2px rgba(14,165,233,0.8);
+  }
   .tl-yr {
-    @apply absolute text-[8px] text-gray-600 whitespace-nowrap pointer-events-none;
-    top: calc(50% + 11px);
+    @apply absolute text-[12px] font-bold whitespace-nowrap pointer-events-none;
+    top: calc(50% + 14px);
+    color: rgba(14,165,233,0.6);
   }
-  .tl-mark.active .tl-yr { @apply text-ocean-accent; }
+  .tl-mark.active .tl-yr { color: #0ea5e9; font-size: 14px; }
 
-  /* Timeline handles */
+  /* ── Timeline handles ─────────────────────────── */
   .tl-handle {
     @apply absolute top-1/2 -translate-y-1/2 -translate-x-1/2
            w-4 h-4 rounded-full border-2
            cursor-grab active:cursor-grabbing z-10;
   }
 
-  /* Zoom buttons */
+  /* ── Zoom buttons ─────────────────────────────── */
   .zoom-btn {
-    @apply w-8 h-8 flex items-center justify-center rounded font-display
-           bg-ocean-900/90 border border-ocean-700 text-gray-400 text-lg
-           hover:border-ocean-accent hover:text-ocean-accent
-           transition-colors cursor-pointer;
+    @apply w-9 h-9 flex items-center justify-center rounded-xl font-display
+           border text-lg transition-colors cursor-pointer;
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
   }
+  .zoom-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
 
-  /* Info panel cards */
+  /* ── Info panel cards ─────────────────────────── */
   .info-card {
-    @apply bg-black/30 border border-ocean-700 rounded-lg p-3;
+    @apply border rounded-2xl p-4;
+    background: #ffffff;
+    border-color: #bae6fd;
   }
   .ic-title {
-    @apply font-display font-bold text-[10px] uppercase tracking-wider mb-2;
+    @apply font-display font-extrabold text-[12px] uppercase tracking-wide mb-2;
+    color: #0369a1;
   }
   .stat-row {
-    @apply flex justify-between items-baseline py-1.5
-           border-b border-ocean-700 text-[10px] last:border-0;
+    @apply flex justify-between items-baseline py-2
+           border-b text-[12px] last:border-0;
+    border-color: #e0f2fe;
+    color: #075985;
   }
-  .stat-val { @apply font-display font-bold text-[13px]; }
+  .stat-val { @apply font-display font-bold text-[15px]; }
   .src-tag {
-    @apply inline-block px-1.5 py-0.5 rounded text-[9px] mr-1 mb-1
-           bg-ocean-accent/10 border border-ocean-accent/20 text-ocean-accent;
+    @apply inline-block px-2 py-0.5 rounded-full text-[10px] mr-1 mb-1;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    color: #0369a1;
   }
 
-  /* Season select — arrow via CSS, avoids inline SVG in HTML */
+  /* ── Right panel background ───────────────────── */
+  #info-panel {
+    background: linear-gradient(175deg, #e0f2fe 0%, #f0f9ff 60%, #ffffff 100%);
+  }
+
+  /* ── Season select arrow ──────────────────────── */
   #season-select {
     appearance: none;
     -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a6274'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230284c7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 8px center;
     padding-right: 24px;

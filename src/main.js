@@ -7,7 +7,9 @@ import { DEFAULT_YEAR } from './config.js'
 import {
   initMap, setVariable, setYear, setSeason,
   setCompareMode, setCompareYears,
+  setYearFraction,
   zoomIn, zoomOut, zoomReset,
+  setProjection,
   onCursor, onLoading,
 } from './map.js'
 import {
@@ -42,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onLoading(loading => setLoading(loading))
 
   initTimeline({
+    onYearFrac: frac => setYearFraction(frac),
     onYearChange: year => {
       app.year = year
       setYear(year)
@@ -63,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
   _bindCompareToggle()
   _bindSeasonSelect()
   _bindZoomButtons()
+  _bindProjectionToggle()
 
   _sync()
 })
@@ -111,17 +115,80 @@ function _bindCompareToggle() {
 }
 
 function _bindSeasonSelect() {
-  document.getElementById('season-select').addEventListener('change', e => {
-    app.season = e.target.value
-    setSeason(app.season)
-    _sync()
+  const trigger = document.getElementById('season-trigger')
+  const options = document.getElementById('season-options')
+  const label   = document.getElementById('season-label')
+  const arrow   = document.getElementById('season-arrow')
+  const labels  = { year: 'Full Year', spring: 'Spring', summer: 'Summer', fall: 'Fall', winter: 'Winter' }
+
+  let open = false
+
+  const allOpts = document.querySelectorAll('.season-opt')
+
+  const updateVisible = () => {
+    allOpts.forEach(opt => {
+      opt.style.display = opt.dataset.value === app.season ? 'none' : ''
+    })
+  }
+
+  const close = () => {
+    open = false
+    options.style.maxHeight = '0'
+    arrow.style.transform = ''
+  }
+
+  trigger.addEventListener('click', e => {
+    e.stopPropagation()
+    open = !open
+    if (open) updateVisible()
+    options.style.maxHeight = open ? '200px' : '0'
+    arrow.style.transform = open ? 'rotate(180deg)' : ''
   })
+
+  allOpts.forEach(opt => {
+    opt.addEventListener('mouseenter', () => { opt.style.background = '#e0f2fe' })
+    opt.addEventListener('mouseleave', () => { opt.style.background = '' })
+    opt.addEventListener('click', e => {
+      e.stopPropagation()
+      app.season = opt.dataset.value
+      label.textContent = labels[app.season]
+      setSeason(app.season)
+      _sync()
+      close()
+    })
+  })
+
+  updateVisible()
+  document.addEventListener('click', close)
 }
 
 function _bindZoomButtons() {
   document.getElementById('btn-zoom-in')?.addEventListener('click',    zoomIn)
   document.getElementById('btn-zoom-out')?.addEventListener('click',   zoomOut)
   document.getElementById('btn-zoom-reset')?.addEventListener('click', zoomReset)
+}
+
+function _bindProjectionToggle() {
+  const btn   = document.getElementById('projection-toggle')
+  const thumb = document.getElementById('proj-thumb')
+  let isGlobe = true
+
+  btn.addEventListener('click', () => {
+    isGlobe = !isGlobe
+    btn.setAttribute('aria-checked', String(isGlobe))
+
+    if (isGlobe) {
+      btn.style.background   = '#0ea5e9'
+      btn.style.borderColor  = '#0ea5e9'
+      thumb.style.transform  = 'translateX(20px)'
+    } else {
+      btn.style.background   = '#bae6fd'
+      btn.style.borderColor  = '#7dd3fc'
+      thumb.style.transform  = ''
+    }
+
+    setProjection(isGlobe ? 'globe' : 'mercator')
+  })
 }
 
 // ─────────────────────────────────────────

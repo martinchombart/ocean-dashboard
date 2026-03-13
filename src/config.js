@@ -5,12 +5,12 @@
 // ================================================================
 
 // ▼▼▼ PASTE YOUR MAPBOX TOKEN HERE ▼▼▼
-export const MAPBOX_TOKEN = 'YOUR_MAPBOX_TOKEN_HERE'
+export const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFydGluY2hvbWJhcnQiLCJhIjoiY21tbWlhMWdwMmJtcjJ3b3B3cDU4d2d3MyJ9.bvQUw5scp5wfeaC3O5Xrpw'
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 export const YEAR_MIN     = 1960
-export const YEAR_MAX     = 2024
-export const DEFAULT_YEAR = 2024
+export const YEAR_MAX     = 2025
+export const DEFAULT_YEAR = 2025
 
 export const MAP_CONFIG = {
   style:      'mapbox://styles/mapbox/dark-v11',
@@ -18,7 +18,7 @@ export const MAP_CONFIG = {
   zoom:       1.7,
   minZoom:    1,
   maxZoom:    9,
-  projection: 'naturalEarth',
+  projection: 'globe',
 }
 
 // ── VARIABLE DEFINITIONS ──────────────────────────────────────

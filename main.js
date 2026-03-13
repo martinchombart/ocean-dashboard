@@ -1,138 +1,115 @@
 // ─────────────────────────────────────────────────────────────
-// main.js  —  Ocean Health Dashboard — App Entry Point
-// Wires together: map, timeline, panel, legend, cursor
+// main.js  —  Ocean Health Dashboard · Entry Point
 // ─────────────────────────────────────────────────────────────
 
 import './style.css'
-
+import { DEFAULT_YEAR } from './config.js'
 import {
-  initMap,
-  setVariable, setYear, setSeason,
+  initMap, setVariable, setYear, setSeason,
   setCompareMode, setCompareYears,
   zoomIn, zoomOut, zoomReset,
   onCursor, onLoading,
 } from './map.js'
-
-import { initTimeline, setCompareMode as tlSetCompare, getCompareYears } from './timeline.js'
-import { initPanel, updatePanel }                                         from './panel.js'
-import { initLegend, updateLegend }                                       from './legend.js'
-import { initCursor, updateCursor, setCursorState }                       from './cursor.js'
-
-import { DEFAULT_YEAR } from './config.js'
+import {
+  initTimeline, setCompareMode as tlSetCompare, getCompareYears
+} from './timeline.js'
+import {
+  initTooltip, updateTooltip, setTooltipState,
+  updateLegend, setLoading, initPanel, renderPanel,
+} from './ui.js'
 
 // ─────────────────────────────────────────
 // APP STATE
 // ─────────────────────────────────────────
 const app = {
-  variable:    'temperature',
-  season:      'year',
-  year:        DEFAULT_YEAR,
-  compareMode: false,
-  compareYearA: 1990,
-  compareYearB: DEFAULT_YEAR,
+  variable:  'temperature',
+  season:    'year',
+  year:      DEFAULT_YEAR,
+  compare:   false,
+  yearA:     1990,
+  yearB:     DEFAULT_YEAR,
 }
 
 // ─────────────────────────────────────────
-// INIT ALL MODULES
+// BOOT
 // ─────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-
-  // Map
   initMap('map')
 
-  // Map callbacks
-  onCursor((value, unit, lon, lat, hasData) => {
-    updateCursor(value, unit, lon, lat, hasData)
-  })
-  onLoading((loading) => {
-    const overlay = document.getElementById('map-loading')
-    if (!overlay) return
-    if (loading) {
-      overlay.classList.remove('opacity-0', 'pointer-events-none')
-      document.getElementById('loading-text').textContent = 'Loading data…'
-    } else {
-      overlay.classList.add('opacity-0', 'pointer-events-none')
-    }
-  })
+  // Fallback: hide loading overlay after 3s regardless
+  setTimeout(() => setLoading(false), 3000)
 
-  // Timeline
+  onCursor((value, unit, lon, lat, hasData) =>
+    updateTooltip(value, unit, lon, lat, hasData)
+  )
+  onLoading(loading => setLoading(loading))
+
   initTimeline({
-    onYearChange: (year) => {
+    onYearChange: year => {
       app.year = year
       setYear(year)
-      _syncLegend()
+      _sync()
     },
     onCompareChange: (yearA, yearB) => {
-      app.compareYearA = yearA
-      app.compareYearB = yearB
+      app.yearA = yearA
+      app.yearB = yearB
       setCompareYears(yearA, yearB)
-      setCursorState(app.variable, app.compareMode, yearA, yearB)
-      _syncLegend()
+      setTooltipState(app.variable, app.compare, yearA, yearB)
+      _sync()
     },
   })
 
-  // Panel
+  initTooltip()
   initPanel()
 
-  // Legend
-  initLegend()
-
-  // Cursor
-  initCursor()
-
-  // Wire UI controls
-  _bindDataTabs()
+  _bindTabs()
   _bindCompareToggle()
   _bindSeasonSelect()
   _bindZoomButtons()
 
-  // Initial sync
-  _syncAll()
+  _sync()
 })
 
 // ─────────────────────────────────────────
 // UI BINDINGS
 // ─────────────────────────────────────────
-function _bindDataTabs() {
+function _bindTabs() {
   document.querySelectorAll('.data-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'))
       tab.classList.add('active')
       app.variable = tab.dataset.key
       setVariable(app.variable)
-      setCursorState(app.variable, app.compareMode, app.compareYearA, app.compareYearB)
-      updatePanel(app.variable, app.compareMode)
-      _syncLegend()
+      setTooltipState(app.variable, app.compare, app.yearA, app.yearB)
+      renderPanel(app.variable)
+      _sync()
     })
   })
 }
 
 function _bindCompareToggle() {
-  const btn  = document.getElementById('compare-toggle')
-  const pill = document.getElementById('compare-pill')
+  const btn   = document.getElementById('compare-toggle')
+  const thumb = document.getElementById('toggle-thumb')
+  const pill  = document.getElementById('compare-pill')
 
   btn.addEventListener('click', () => {
-    app.compareMode = !app.compareMode
-    btn.setAttribute('aria-checked', String(app.compareMode))
+    app.compare = !app.compare
+    btn.setAttribute('aria-checked', String(app.compare))
 
-    // Toggle CSS state
-    if (app.compareMode) {
+    if (app.compare) {
       btn.classList.add('!bg-ocean-accent', '!border-ocean-accent')
-      btn.querySelector('.toggle-thumb').style.transform = 'translateX(20px)'
-      pill.classList.remove('hidden')
-      pill.classList.add('flex')
+      thumb.style.transform = 'translateX(20px)'
+      pill.classList.remove('hidden'); pill.classList.add('flex')
     } else {
       btn.classList.remove('!bg-ocean-accent', '!border-ocean-accent')
-      btn.querySelector('.toggle-thumb').style.transform = ''
-      pill.classList.add('hidden')
-      pill.classList.remove('flex')
+      thumb.style.transform = ''
+      pill.classList.add('hidden'); pill.classList.remove('flex')
     }
 
-    tlSetCompare(app.compareMode)
-    setCompareMode(app.compareMode)
-    setCursorState(app.variable, app.compareMode, app.compareYearA, app.compareYearB)
-    updatePanel(app.variable, app.compareMode)
-    _syncLegend()
+    tlSetCompare(app.compare)
+    setCompareMode(app.compare)
+    setTooltipState(app.variable, app.compare, app.yearA, app.yearB)
+    _sync()
   })
 }
 
@@ -140,33 +117,27 @@ function _bindSeasonSelect() {
   document.getElementById('season-select').addEventListener('change', e => {
     app.season = e.target.value
     setSeason(app.season)
-    _syncLegend()
+    _sync()
   })
 }
 
 function _bindZoomButtons() {
-  document.getElementById('zoom-in')?.addEventListener('click',    zoomIn)
-  document.getElementById('zoom-out')?.addEventListener('click',   zoomOut)
-  document.getElementById('zoom-reset')?.addEventListener('click', zoomReset)
+  document.getElementById('btn-zoom-in')?.addEventListener('click',    zoomIn)
+  document.getElementById('btn-zoom-out')?.addEventListener('click',   zoomOut)
+  document.getElementById('btn-zoom-reset')?.addEventListener('click', zoomReset)
 }
 
 // ─────────────────────────────────────────
-// SYNC HELPERS
+// SYNC LEGEND + PANEL
 // ─────────────────────────────────────────
-function _syncLegend() {
+function _sync() {
   const { yearA, yearB } = getCompareYears()
-  updateLegend(
-    app.variable,
-    app.compareMode,
-    app.year,
-    app.season,
-    yearA,
-    yearB,
-  )
-}
-
-function _syncAll() {
-  updatePanel(app.variable, app.compareMode)
-  _syncLegend()
-  setCursorState(app.variable, app.compareMode, app.compareYearA, app.compareYearB)
+  updateLegend({
+    variable: app.variable,
+    compare:  app.compare,
+    year:     app.year,
+    season:   app.season,
+    yearA, yearB,
+  })
+  renderPanel(app.variable)
 }

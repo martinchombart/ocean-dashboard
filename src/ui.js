@@ -70,8 +70,8 @@ export function updateTooltip(value, unit, lon, lat, hasData) {
   document.getElementById('tt-coord').textContent = `${latStr},  ${lonStr}`
 
   if (!hasData || value === null || value === undefined) {
-    document.getElementById('tt-value').textContent = 'No data'
-    document.getElementById('tt-unit').textContent  = 'Lack of data in this region'
+    tt.classList.add('hidden')
+    return
   } else if (_tooltipCompare) {
     const sign = value >= 0 ? '+' : ''
     document.getElementById('tt-value').textContent = sign + value.toFixed(3)
@@ -131,7 +131,7 @@ export function renderPanel(variable) {
 
   const statsHtml = meta.stats.map(s => `
     <div class="stat-row">
-      <span class="text-gray-400">${s.label}</span>
+      <span style="color:#0369a1">${s.label}</span>
       <span class="stat-val" style="color:${meta.accent}">${s.value}</span>
     </div>`).join('')
 
@@ -139,9 +139,9 @@ export function renderPanel(variable) {
 
   content.innerHTML = `
     <div>
-      <h2 class="font-display font-black text-[18px] text-white leading-tight mb-1">${meta.label}</h2>
+      <h2 class="font-display font-black text-[22px] leading-tight mb-1" style="color:#0c4a6e">${meta.label}</h2>
       <div class="h-0.5 w-8 rounded-full mb-3" style="background:${meta.accent}"></div>
-      <p class="text-[10px] leading-relaxed text-gray-400">${meta.importance}</p>
+      <p class="text-[13px] leading-relaxed" style="color:#0369a1">${meta.importance}</p>
     </div>
 
     <div class="info-card">
@@ -151,40 +151,39 @@ export function renderPanel(variable) {
 
     <div class="info-card">
       <div class="ic-title" style="color:${meta.accent}">🗺 How to Read the Map</div>
-      <p class="text-[10px] leading-relaxed text-gray-400">${meta.interpret}</p>
+      <p class="text-[13px] leading-relaxed" style="color:#0369a1">${meta.interpret}</p>
     </div>
 
-    <div class="info-card">
-      <div class="ic-title" style="color:${meta.accent}">⏱ Compare Mode</div>
-      <p class="text-[10px] leading-relaxed text-gray-400">
-        Toggle <strong class="text-gray-200">Compare</strong> in the top bar.
-        Drag the <span style="color:#ff6b35">orange handle</span> (earlier year)
-        and <span style="color:#00b4ff">blue handle</span> (later year) on the timeline.
-        The map switches to a signed difference view — warm reds signal deterioration,
-        cool blues signal improvement.
-      </p>
-    </div>
-
-    <div class="info-card">
-      <div class="ic-title" style="color:${meta.accent}">📡 Data Sources</div>
-      <p class="text-[10px] text-gray-400 mb-2">Gridded means derived from:</p>
-      ${srcHtml}
-      <p class="text-[9px] text-gray-600 mt-2">
-        Color scale anchored to 2024 baseline. Educational visualization.
-      </p>
-    </div>
-
-    <div class="info-card" style="border-color:rgba(180,60,30,.35)">
-      <div class="ic-title" style="color:#f87171">⚠ Why It Matters</div>
-      <p class="text-[10px] leading-relaxed text-gray-400">
-        The ocean absorbs <strong class="text-gray-200">90% of excess heat</strong>
-        and <strong class="text-gray-200">25% of CO₂</strong> from human activity.
+    <div class="info-card" style="border-color:#fca5a5">
+      <div class="ic-title" style="color:#ef4444">⚠ Why It Matters</div>
+      <p class="text-[13px] leading-relaxed" style="color:#0369a1">
+        The ocean absorbs <strong style="color:#0c4a6e">90% of excess heat</strong>
+        and <strong style="color:#0c4a6e">25% of CO₂</strong> from human activity.
         Every degree of warming, every pH unit lost, every disrupted current
         has cascading effects on billions of lives and millions of species.
       </p>
     </div>
 
-    <p class="text-center text-[9px] text-gray-600 pb-1 leading-relaxed">
+    <div class="info-card">
+      <div class="ic-title" style="color:${meta.accent}">📡 Data Sources</div>
+      <p class="text-[13px] mb-2" style="color:#0369a1">Gridded means derived from:</p>
+      ${srcHtml}
+      <p class="text-[11px] mt-2" style="color:#7dd3fc">
+        Color scale anchored to 2024 baseline. Educational visualization.
+      </p>
+    </div>
+
+    <div class="info-card">
+      <div class="ic-title" style="color:${meta.accent}">⏱ Compare Mode</div>
+      <p class="text-[13px] leading-relaxed" style="color:#0369a1">
+        Toggle <strong style="color:#0c4a6e">Compare</strong> in the top right.
+        Drag the <span style="color:#f97316">orange handle</span> (earlier year)
+        and <span style="color:#0ea5e9">blue handle</span> (later year) on the timeline.
+        Warm reds = deterioration, cool blues = improvement.
+      </p>
+    </div>
+
+    <p class="text-center text-[11px] pb-1 leading-relaxed" style="color:#7dd3fc">
       NOAA · Copernicus Marine · NASA · SOCAT<br>
       For educational & awareness purposes only
     </p>`

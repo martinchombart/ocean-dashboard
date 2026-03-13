@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  optimizeDeps: { exclude: ['mapbox-gl'] },
+  optimizeDeps: {
+    include: ['mapbox-gl'],
+  },
   build: {
     rollupOptions: {
       output: {

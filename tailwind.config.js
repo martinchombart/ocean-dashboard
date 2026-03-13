@@ -4,20 +4,33 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Syne', 'sans-serif'],
-        mono:    ['Space Mono', 'monospace'],
+        sans:    ['Nunito', 'sans-serif'],
+        display: ['Nunito', 'sans-serif'],
+        mono:    ['Nunito', 'sans-serif'],
       },
       colors: {
         ocean: {
-          950: '#020810', 900: '#040e1a', 800: '#071626',
-          700: '#0a2035', 600: '#0d2a42', 500: '#0f3350',
-          accent: '#00b4ff', warm: '#ff6b35',
-          teal: '#00c9a7', violet: '#a78bfa', amber: '#fbbf24',
+          50:  '#f0f9ff',   // near-white, panel backgrounds
+          100: '#e0f2fe',   // very light blue
+          200: '#bae6fd',   // light borders
+          300: '#7dd3fc',   // muted accents
+          400: '#38bdf8',   // interactive elements
+          500: '#0ea5e9',   // primary sky blue
+          600: '#0284c7',   // ocean blue
+          700: '#0369a1',   // deep blue
+          800: '#075985',   // deeper
+          900: '#0c4a6e',   // dark navy
+          950: '#082f49',   // deepest
+          accent: '#0ea5e9', // sky blue — main interactive
+          warm:   '#f97316', // orange (temperature warm)
+          teal:   '#14b8a6', // teal
+          violet: '#8b5cf6',
+          amber:  '#f59e0b',
         }
       },
       boxShadow: {
-        'glow-blue':   '0 0 20px -4px rgba(0,180,255,0.45)',
-        'glow-orange': '0 0 20px -4px rgba(255,107,53,0.45)',
+        'glow-blue':   '0 0 20px -4px rgba(14,165,233,0.5)',
+        'glow-orange': '0 0 20px -4px rgba(249,115,22,0.5)',
       }
     },
   },

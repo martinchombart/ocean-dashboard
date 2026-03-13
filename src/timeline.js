@@ -12,31 +12,28 @@ let _compare = false
 let _year    = DEFAULT_YEAR
 let _yearA   = 1990
 let _yearB   = DEFAULT_YEAR
-let _onYear, _onCompare
+let _onYear, _onCompare, _onYearFrac
 
 // DOM
-let track, fill, hdlA, hdlB
+let track, fill, hdlA, hdlB, cursor, cursorYr
 
-export function initTimeline({ onYearChange, onCompareChange }) {
+export function initTimeline({ onYearChange, onCompareChange, onYearFrac }) {
   _onYear    = onYearChange
   _onCompare = onCompareChange
+  _onYearFrac = onYearFrac
 
-  track = document.getElementById('tl-track')
-  fill  = document.getElementById('tl-fill')
-  hdlA  = document.getElementById('hdl-a')
-  hdlB  = document.getElementById('hdl-b')
+  track    = document.getElementById('tl-track')
+  fill     = document.getElementById('tl-fill')
+  hdlA     = document.getElementById('hdl-a')
+  hdlB     = document.getElementById('hdl-b')
+  cursor   = document.getElementById('tl-cursor')
+  cursorYr = document.getElementById('tl-cursor-yr')
 
   _buildMarks()
 
-  // Click track → set year (normal mode)
-  track.addEventListener('click', e => {
-    if (_compare) return
-    if (e.target === hdlA || e.target === hdlB) return
-    _setYear(_evtToYear(e))
-  })
-
   _makeDraggable(hdlA, 'a')
   _makeDraggable(hdlB, 'b')
+  _makeCursorDraggable()
 
   _render()
 }
@@ -78,40 +75,86 @@ function _makeDraggable(handle, which) {
   document.addEventListener('touchend', () => { drag = false })
 }
 
+function _makeCursorDraggable() {
+  let drag = false
+  let _debounce = null
+
+  const onMove = clientX => {
+    const r = track.getBoundingClientRect()
+    const rawPct  = Math.max(0, Math.min(100, ((clientX - r.left) / r.width) * 100))
+    const rawFrac = YEAR_MIN + (rawPct / 100) * (YEAR_MAX - YEAR_MIN)
+    _year = _p2y(rawPct)
+    cursor.style.left    = rawPct + '%'
+    fill.style.width     = rawPct + '%'
+    cursorYr.textContent = _year
+    _onYearFrac?.(rawFrac)
+    clearTimeout(_debounce)
+    _debounce = setTimeout(() => _onYear?.(_year), 120)
+  }
+
+  const startDrag = (clientX, e) => {
+    if (_compare) return
+    if (e.target === hdlA || e.target === hdlB) return
+    drag = true
+    e.preventDefault()
+    cursor.style.cursor = 'grabbing'
+    onMove(clientX)
+  }
+
+  const onRelease = () => {
+    if (!drag) return
+    drag = false
+    cursor.style.cursor = ''
+    clearTimeout(_debounce)
+    _onYear?.(_year)
+  }
+
+  // Mousedown anywhere on the track starts drag immediately
+  track.addEventListener('mousedown', e => startDrag(e.clientX, e))
+  document.addEventListener('mousemove', e => { if (drag && !_compare) onMove(e.clientX) })
+  document.addEventListener('mouseup', onRelease)
+
+  track.addEventListener('touchstart', e => {
+    if (_compare || e.target === hdlA || e.target === hdlB) return
+    drag = true; onMove(e.touches[0].clientX)
+  }, { passive: true })
+  document.addEventListener('touchmove', e => { if (drag && !_compare) onMove(e.touches[0].clientX) }, { passive: true })
+  document.addEventListener('touchend', onRelease)
+}
+
+function _renderVisual() {
+  cursor.style.left    = _y2p(_year) + '%'
+  cursorYr.textContent = _year
+  fill.style.width     = _y2p(_year) + '%'
+}
+
 function _render() {
   if (_compare) {
     hdlA.classList.remove('hidden')
     hdlB.classList.remove('hidden')
     document.getElementById('tl-cmp-hint').classList.remove('hidden')
-    document.getElementById('yr-display').classList.add('hidden')
-    document.getElementById('cmp-display').classList.remove('hidden')
-    document.getElementById('cmp-display').classList.add('flex')
+    cursor.classList.add('hidden')
 
     const pA = _y2p(_yearA), pB = _y2p(_yearB)
     hdlA.style.left  = pA + '%'
     hdlB.style.left  = pB + '%'
     fill.style.left  = pA + '%'
     fill.style.width = (pB - pA) + '%'
-
-    document.getElementById('cmp-a').textContent = _yearA
-    document.getElementById('cmp-b').textContent = _yearB
   } else {
     hdlA.classList.add('hidden')
     hdlB.classList.add('hidden')
     document.getElementById('tl-cmp-hint').classList.add('hidden')
-    document.getElementById('yr-display').classList.remove('hidden')
-    document.getElementById('cmp-display').classList.add('hidden')
-    document.getElementById('cmp-display').classList.remove('flex')
+    cursor.classList.remove('hidden')
+    cursor.style.left  = _y2p(_year) + '%'
+    cursorYr.textContent = _year
 
     fill.style.left  = '0%'
     fill.style.width = _y2p(_year) + '%'
-    document.getElementById('yr-display').textContent = _year
   }
 
-  // Sync mark active state
+  // Sync mark active state (decade marks no longer need active styling)
   document.querySelectorAll('.tl-mark').forEach(el => {
-    const y = parseInt(el.querySelector('.tl-yr').textContent)
-    el.classList.toggle('active', y === _year && !_compare)
+    el.classList.remove('active')
   })
 }
 
